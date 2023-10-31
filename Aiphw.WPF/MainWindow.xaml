@@ -1,0 +1,44 @@
+﻿<Window x:Class="Aiphw.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Aiphw.WPF"
+        xmlns:views="clr-namespace:Aiphw.WPF.Views"
+        mc:Ignorable="d"
+        Title="AIP 61247051S" Width="1600" Height="900" >
+    <TabControl SelectedIndex="3">
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">Rotation</TextBlock>
+            </TabItem.Header>
+            <views:RotationView />
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">Histogram</TextBlock>
+            </TabItem.Header>
+            <views:HistogramView/>
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">Noise</TextBlock>
+            </TabItem.Header>
+            <views:NoiseView />
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">Convolution</TextBlock>
+            </TabItem.Header>
+            <views:ConvolutionView/>
+        </TabItem>
+        <!--<TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">Debug</TextBlock>
+            </TabItem.Header>
+            <views:DebugView/>
+        </TabItem>-->
+
+    </TabControl>
+
+</Window>
