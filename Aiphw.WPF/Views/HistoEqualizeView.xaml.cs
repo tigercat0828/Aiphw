@@ -1,23 +1,23 @@
 ﻿using Aiphw.Models;
 using Aiphw.WPF.Extensions;
 using Microsoft.Win32;
+using ScottPlot;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 
+
 namespace Aiphw.WPF.Views {
-
-    public partial class RotationView : UserControl {
-
-        RawImage m_outputRaw;
-        RawImage m_inputRaw;
-        public RotationView() {
-
+    /// <summary>
+    /// HistoEqualizeView.xaml 的互動邏輯
+    /// </summary>
+    public partial class HistoEqualizeView : UserControl {
+        public HistoEqualizeView() {
             InitializeComponent();
             c_SaveFileBtn.IsEnabled = false;
-            c_LeftRotateBtn.IsEnabled = false;
-            c_RightRotateBtn.IsEnabled = false;
         }
-
+        RawImage m_inputRaw;
+        RawImage m_outputRaw;
         private void OpenFileBtn_Click(object sender, RoutedEventArgs e) {
 
             OpenFileDialog dialog = new() {
@@ -26,17 +26,22 @@ namespace Aiphw.WPF.Views {
             };
             if (dialog.ShowDialog() == true) {
 
+
                 RawImage loadRaw = new(dialog.FileName);
 
-                m_inputRaw = new RawImage(loadRaw);
-                m_outputRaw = new RawImage(loadRaw);
+                m_inputRaw = ImageProcessing.GrayScale(new RawImage(loadRaw));
+                m_outputRaw = ImageProcessing.HistoEqualizeGrayscale(m_inputRaw);
+
+                // equalization
 
                 Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
                 Utility.UpdateImageBox(c_InputImgBox, m_inputRaw.ToBitmap());
 
+                DrawHistogram(c_InputHisto, m_inputRaw);
+                DrawHistogram(c_OutputHisto, m_outputRaw);
+
+
                 c_SaveFileBtn.IsEnabled = true;
-                c_LeftRotateBtn.IsEnabled = true;
-                c_RightRotateBtn.IsEnabled = true;
             }
         }
 
@@ -46,22 +51,18 @@ namespace Aiphw.WPF.Views {
                 Filter = "JPEG Image (*.jpg)|*.jpg|PNG Image (*.png)|*.png|Bitmap Image (*.bmp)|*.bmp|PPM Image (*.ppm)|*.ppm",
                 Title = "Save Image"
             };
-
             if (saveFileDialog.ShowDialog() == true) {
                 string filename = saveFileDialog.FileName;
                 m_outputRaw.SaveFile(filename);
             }
         }
+        private void DrawHistogram(WpfPlot plotControl, RawImage image) {
 
-        private void RightRotateBtn_Click(object sender, RoutedEventArgs e) {
-            m_outputRaw = ImageProcessing.RightRotate(m_outputRaw);
-            Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
+            Utility.SetHistogramFromChannel(plotControl.Plot, image, channel: 0, Color.FromArgb(128, 128, 128), "gray");
+
+            plotControl.Render();
         }
-
-        private void LeftRotateBtn_Click(object sender, RoutedEventArgs e) {
-            m_outputRaw = ImageProcessing.LeftRotate(m_outputRaw);
-            Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
-        }
-
     }
+
+
 }

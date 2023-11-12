@@ -54,7 +54,7 @@ namespace Aiphw.WPF.Views {
         private void ProcessBtn_Click(object sender, RoutedEventArgs e) {
             float[] rawMask = GetCustomMaskCell();
             MaskKernel kernel = new MaskKernel(rawMask);
-            m_outputRaw = ImageProcessing.ConvolutionRGB(m_inputRaw, kernel);
+            m_outputRaw = ImageProcessing.ConvolutionFullColor(m_inputRaw, kernel);
             Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
         }
 

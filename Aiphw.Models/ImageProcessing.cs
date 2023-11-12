@@ -1,10 +1,4 @@
-﻿//#define LOAD_SLOW_CODE
-
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Intrinsics.X86;
-
+﻿
 namespace Aiphw.Models;
 
 public static class ImageProcessing {
@@ -32,7 +26,6 @@ public static class ImageProcessing {
             Console.WriteLine();
         }
     }
-
     public static void PrintPixelHexImage(RawImage image) {
         int Width = image.Width;
         int Height = image.Height;
@@ -42,13 +35,13 @@ public static class ImageProcessing {
         for (int y = 0; y < Height; y++) {
             for (int x = 0; x < Width; x++) {
                 int index = y * Width + x;
-                Console.Write($"{image[index], 12}, ");
+                Console.Write($"{image[index],12}, ");
             }
             Console.WriteLine();
         }
     }
     #endregion
-    public static RawImage ConvolutionRGB(RawImage input, MaskKernel kernel) {
+    public static RawImage ConvolutionFullColor(RawImage input, MaskKernel kernel) {
         int kernelSize = kernel.Size;
         int kernelOffset = kernelSize / 2;
         int width = input.Width;
@@ -79,7 +72,7 @@ public static class ImageProcessing {
         });
         return output;
     }
-    public static RawImage ConvolutionGray(RawImage input, MaskKernel kernel) {
+    public static RawImage ConvolutionGrayScale(RawImage input, MaskKernel kernel) {
         int kernelOffset = kernel.Size / 2;
         int width = input.Width;
         int height = input.Height;
@@ -105,15 +98,36 @@ public static class ImageProcessing {
         });
         return output;
     }
+    public static RawImage OverlayCalculate(RawImage input1, RawImage input2, Func<uint, uint, uint> func) {
+
+        if (input1.Width != input2.Width || input1.Height != input2.Height) {
+            return null;
+        }
+        int width = input1.Width;
+        int height = input1.Height;
+        int length = input1.Length;
+        RawImage output = new(width, height);
+
+        Parallel.For(0, length, i => {
+
+            uint b = func(input1[i] >> B & 0xFF, input2[i] >> B & 0xFF);
+            uint g = func(input1[i] >> G & 0xFF, input2[i] >> G & 0xFF);
+            uint r = func(input1[i] >> R & 0xFF, input2[i] >> R & 0xFF);
+
+            output[i] = (b << B | g << G | r << R | 0xFF000000);
+        });
+
+        return output;
+    }
     public static RawImage Smooth(RawImage input) {
 
         MaskKernel smoothMask = MaskKernel.LoadPreBuiltMask(DefaultMask.GaussianSmooth);
         RawImage garyScale = GrayScale(input);
-        return ConvolutionGray(garyScale, smoothMask);
+        return ConvolutionGrayScale(garyScale, smoothMask);
 
-        return ConvolutionRGB(input, smoothMask);
+        return ConvolutionFullColor(input, smoothMask);
 
-        
+
 
     }
     public static RawImage Reverse(RawImage input) {
@@ -139,12 +153,12 @@ public static class ImageProcessing {
         // Step 2: Calculate Gradient
         MaskKernel sobelXmask = MaskKernel.LoadPreBuiltMask(DefaultMask.SobelX);
         MaskKernel sobelYmask = MaskKernel.LoadPreBuiltMask(DefaultMask.SobelY);
-        RawImage sobelXimage = ConvolutionGray(smooth, sobelXmask);
-        RawImage sobelYimage = ConvolutionGray(smooth, sobelYmask);
+        RawImage sobelXimage = ConvolutionGrayScale(smooth, sobelXmask);
+        RawImage sobelYimage = ConvolutionGrayScale(smooth, sobelYmask);
         Func<uint, uint, uint> grad = (gx, gy) => (uint)Math.Clamp(Math.Sqrt(gx * gx + gy * gy), 0, 255);
-        
+
         RawImage gradientData = OverlayCalculate(sobelXimage, sobelYimage, grad);
-       
+
         return Reverse(gradientData);
 
     }
@@ -208,7 +222,7 @@ public static class ImageProcessing {
         Random random = new();
         RawImage output = new(input);
 
-        RawImage noiseImage = new (input.Width, input.Height);
+        RawImage noiseImage = new(input.Width, input.Height);
         uint black = 0xFF000000; // ARGB
         uint white = 0xFFFFFFFF;
         uint gray = 0xFF808080;
@@ -279,7 +293,46 @@ public static class ImageProcessing {
         outNoise = noise;
         return output;
     }
-    public static RawImage DataToRawImage(RawImage image) {
+    public static RawImage HistoEqualizeGrayscale(RawImage input) {
+        int[] gray = new int[256];
+        for (int i = 0; i < input.Length; i++) {
+            uint value = input[i] >> R & 0xFF;
+            gray[value]++;
+        }
+        int maxCdf = int.MinValue;
+        int minCdf = int.MaxValue;
+        int[] cdf = new int[256];
+        cdf[0] = gray[0];
+        for (int i = 1; i < 256; i++) {
+            cdf[i] = gray[i] + cdf[i - 1];
+            minCdf = Math.Min(minCdf, cdf[i]);
+            maxCdf = Math.Max(maxCdf, cdf[i]);
+        }
+        if (minCdf == maxCdf) {
+            return input;
+        }
+        double denominator = 255.0 / (maxCdf - minCdf);
+        uint[] eqhisto = new uint[256];
+        eqhisto[0] = 2;
+        for (int i = 1; i < 256; i++) {
+            eqhisto[i] = (uint)Math.Round((cdf[i] - minCdf) * denominator);
+        }
+        
+        RawImage output = new(input.Width, input.Height);
+        for (int i = 0; i < output.Length; i++) {
+            uint inVal = input[i] >> R & 0xFF;
+            uint outVal = eqhisto[inVal];
+            uint pixel = outVal << R | outVal << G | outVal << B | 0xFF000000;
+
+            output[i] = pixel;
+        }
+        return output;
+    }
+    public static RawImage HistoEqualizeFullColor(RawImage image) {
+        throw new NotImplementedException();
+    }
+
+    public static RawImage Copy(RawImage image) {
         RawImage output = new(image.Width, image.Height);
         int length = output.Length;
         Parallel.For(0, length, i => {
@@ -293,201 +346,4 @@ public static class ImageProcessing {
 
         return output;
     }
-    public static RawImage OverlayCalculate(RawImage input1, RawImage input2, Func<uint, uint, uint> func) {
-
-        if (input1.Width != input2.Width || input1.Height != input2.Height) {
-            return null;
-        }
-        int width = input1.Width;
-        int height = input1.Height;
-        int length = input1.Length;
-        RawImage output = new(width, height);
-
-        Parallel.For(0, length, i => {
-
-            uint b = func(input1[i] >> B & 0xFF, input2[i] >> B & 0xFF);
-            uint g = func(input1[i] >> G & 0xFF, input2[i] >> G & 0xFF);
-            uint r = func(input1[i] >> R & 0xFF, input2[i] >> R & 0xFF);
-
-            output[i] = (b << B | g << G | r << R | 0xFF000000);
-        });
-
-        return output;
-    }
-#if LOAD_SLOW_CODE
-    const int cB = 0, cG = 1, cR = 2, cA = 3;
-    public static RawImage2 GrayScale2(RawImage2 input) {
-        int width = input.Width;
-        int height = input.Height;
-        RawImage2 output = new(width, height);
-
-        Parallel.For(0, height, y => {
-            for (int x = 0; x < width; x++) {
-                int index = (y * width + x) * 4;
-                byte gray = (byte)((input.Pixels[index + cB] + input.Pixels[index + cG] + input.Pixels[index + cR]) / 3);
-
-                output.Pixels[index + cB] = gray;
-                output.Pixels[index + cG] = gray;
-                output.Pixels[index + cR] = gray;
-                output.Pixels[index + cA] = 255;
-            }
-        });
-        output.FinishEdit();
-        return output;
-
-    }
-    public static RawImage2 Overlay2(RawImage2 input1, RawImage2 input2, Func<byte, byte, byte> func) {
-
-        if (input1.Width != input2.Width || input1.Height != input2.Height) {
-            return null;
-        }
-        int width = input1.Width;
-        int height = input1.Height;
-
-        RawImage2 output = new RawImage2(width, height);
-
-        Parallel.For(0, height, y => {
-            for (int x = 0; x < width; x++) {
-                int index = (y * width + x) * 4;
-                output.Pixels[index + cB] = func(input1.Pixels[index + cB], input2.Pixels[index + cB]);
-                output.Pixels[index + cG] = func(input1.Pixels[index + cG], input2.Pixels[index + cG]);
-                output.Pixels[index + cR] = func(input1.Pixels[index + cR], input2.Pixels[index + cR]);
-                output.Pixels[index + cA] = 255;
-            }
-        });
-
-        output.FinishEdit();
-        return output;
-    }
-    public static RawImage2 Reverse2(RawImage2 input) {
-        int width = input.Width;
-        int height = input.Height;
-        RawImage2 output = new(width, height);
-        Parallel.For(0, height, y => {
-            for (int x = 0; x < width; x++) {
-                int index = (y * width + x) * 4;
-                output.Pixels[index + cB] = (byte)(255 - input.Pixels[index + cB]);
-                output.Pixels[index + cG] = (byte)(255 - input.Pixels[index + cG]);
-                output.Pixels[index + cR] = (byte)(255 - input.Pixels[index + cR]);
-                output.Pixels[index + cA] = 255;
-            }
-        });
-        output.FinishEdit();
-        return output;
-    }
-    public static RawImage2 Smooth2(RawImage2 input) {
-        MaskKernel smoothMask = MaskKernel.LoadPreBuiltMask(DefaultMask.GaussianSmooth);
-        return ConvolutionRGB2(input, smoothMask);
-    }
-    public static RawImage2 ConvolutionRGB2(RawImage2 input, MaskKernel kernel) {
-        int kernelSize = kernel.Size;
-        int kernelOffset = kernelSize / 2;
-        int width = input.Width;
-        int height = input.Height;
-        RawImage2 output = new RawImage2(width, height);
-
-        Parallel.For(0, height, y => {
-            for (int x = 0; x < width; x++) {
-                float[] rgba = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
-
-                for (int i = -kernelOffset; i <= kernelOffset; i++) {
-                    for (int j = -kernelOffset; j <= kernelOffset; j++) {
-                        int pixelX = Math.Clamp(x + i, 0, width - 1);
-                        int pixelY = Math.Clamp(y + j, 0, height - 1);
-                        int pixelIndex = (pixelY * width + pixelX) * 4;
-                        float kernelValue = kernel[i + kernelOffset][j + kernelOffset];
-
-                        rgba[cB] += input.Pixels[pixelIndex + cB] * kernelValue;
-                        rgba[cG] += input.Pixels[pixelIndex + cG] * kernelValue;
-                        rgba[cR] += input.Pixels[pixelIndex + cR] * kernelValue;
-                        // rgba[A] += input.Pixels[pixelIndex + A] * 255;
-                    }
-                }
-
-                int index = (y * width + x) * 4;
-                output.Pixels[index + cB] = (byte)Math.Clamp(rgba[cB] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cG] = (byte)Math.Clamp(rgba[cG] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cR] = (byte)Math.Clamp(rgba[cR] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cA] = 255;
-            }
-        });
-
-        output.FinishEdit();
-        return output;
-    }
-    public static RawImage2 ConvolutionGray2(RawImage2 input, MaskKernel kernel) {
-        int kernelSize = kernel.Size;
-        int kernelOffset = kernelSize / 2;
-        int width = input.Width;
-        int height = input.Height;
-        RawImage2 output = new(width, height);
-
-        Parallel.For(0, height, y => {
-            for (int x = 0; x < width; x++) {
-                float[] rgba = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
-
-                for (int i = -kernelOffset; i <= kernelOffset; i++) {
-                    for (int j = -kernelOffset; j <= kernelOffset; j++) {
-                        int X = Math.Clamp(x + i, 0, width - 1);
-                        int Y = Math.Clamp(y + j, 0, height - 1);
-                        int pIndex = (Y * width + X) * 4;
-                        float kernelValue = kernel[i + kernelOffset][j + kernelOffset];
-
-                        rgba[cB] += input.Pixels[pIndex + cB] * kernelValue;
-                    }
-                }
-                int index = (y * width + x) * 4;
-                output.Pixels[index + cB] = (byte)Math.Clamp(rgba[cB] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cG] = (byte)Math.Clamp(rgba[cB] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cR] = (byte)Math.Clamp(rgba[cB] / kernel.Scalar, 0, 255);
-                output.Pixels[index + cA] = 255;
-            }
-        });
-
-        output.FinishEdit();
-        return output;
-    }
-    public static RawImage2 EdgeDetection2(RawImage2 input) {
-        MaskKernel sobelXmask = MaskKernel.LoadPreBuiltMask(DefaultMask.SobelX);
-        MaskKernel sobelYmask = MaskKernel.LoadPreBuiltMask(DefaultMask.SobelY);
-        RawImage2 grayscale = GrayScale2(input);
-        RawImage2 sobelXimage = ConvolutionGray2(input, sobelXmask);
-        RawImage2 sobelYimage = ConvolutionGray2(input, sobelYmask);
-        Func<byte, byte, byte> gradient = (a, b) => (byte)Math.Clamp(Math.Sqrt(a * a + b * b), 0, 255);
-        RawImage2 edgeDetected = Overlay2(sobelYimage, sobelYimage, gradient);
-
-        return Reverse2(edgeDetected);
-    }
-
-    public static void PrintPixelImage2(RawImage2 image) {
-        const int B = 0, G = 1, R = 2, A = 3;
-        int Width = image.Width;
-        int Height = image.Height;
-        Console.WriteLine($"Width = {Width}");
-        Console.WriteLine($"Height = {Height}");
-        Console.WriteLine($"Pixel count = {image.Pixels.Length / 4}");
-
-        for (int y = 0; y < Height; y++) {
-            for (int x = 0; x < Width; x++) {
-                int index = (y * Width + x) * 4;
-                byte b = image.Pixels[index + B];
-                byte g = image.Pixels[index + G];
-                byte r = image.Pixels[index + R];
-                byte a = image.Pixels[index + A];
-                Console.Write($"[{r,3} {g,3} {b,3} {a,3} ], ");
-            }
-            Console.WriteLine();
-        }
-    }
-    public static void PrintPixelStream2(RawImage2 image) {
-
-        for (int i = 0; i < image.Pixels.Length; i += 4) {
-            byte b = image.Pixels[i + cB];
-            byte g = image.Pixels[i + cG];
-            byte r = image.Pixels[i + cR];
-            byte a = image.Pixels[i + cA];
-            Console.WriteLine($"[{r,3} {g,3} {b,3} {a,3} ], ");
-        }
-    }
-#endif
 }

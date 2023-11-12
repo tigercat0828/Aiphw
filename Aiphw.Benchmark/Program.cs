@@ -1,5 +1,4 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using Aiphw.Models;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
@@ -18,7 +17,7 @@ public class BitwiseVSarrayGray {
     [Benchmark]
     public void Rawimage_MT() {
         //RawImage image = new("./Assets/wolf.png");
-        
+
     }
 
 }

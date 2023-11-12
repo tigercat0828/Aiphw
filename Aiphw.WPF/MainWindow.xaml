@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:Aiphw.WPF.Views"
         mc:Ignorable="d"
         Title="AIP 61247051S" Width="1600" Height="900" >
-    <TabControl SelectedIndex="3">
+    <TabControl SelectedIndex="4">
         <TabItem>
             <TabItem.Header>
                 <TextBlock Style="{StaticResource DefaultTextBlock}">Rotation</TextBlock>
@@ -31,6 +31,12 @@
                 <TextBlock Style="{StaticResource DefaultTextBlock}">Convolution</TextBlock>
             </TabItem.Header>
             <views:ConvolutionView/>
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Style="{StaticResource DefaultTextBlock}">HistoEqualize</TextBlock>
+            </TabItem.Header>
+            <views:HistoEqualizeView/>
         </TabItem>
         <!--<TabItem>
             <TabItem.Header>
