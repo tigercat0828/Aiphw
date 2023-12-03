@@ -1,4 +1,6 @@
 ﻿
+using System.Threading.Channels;
+
 namespace Aiphw.Models;
 
 public static class ImageProcessing {
@@ -130,20 +132,7 @@ public static class ImageProcessing {
 
 
     }
-    public static RawImage Reverse(RawImage input) {
-
-        RawImage output = new(input.Width, input.Height);
-
-        int length = input.Length;
-        Parallel.For(0, length, i => {
-            uint b = 255 - (input[i] >> B & 0xFF);
-            uint g = 255 - (input[i] >> G & 0xFF);
-            uint r = 255 - (input[i] >> R & 0xFF);
-            output[i] = (b << B | g << G | r << R | 0xFF000000);
-
-        });
-        return output;
-    }
+  
     public static RawImage EdgeDetection(RawImage input) {
         // Canny Edge Detection 
         // Step 1: Smooth
@@ -332,18 +321,62 @@ public static class ImageProcessing {
         throw new NotImplementedException();
     }
 
-    public static RawImage Copy(RawImage image) {
-        RawImage output = new(image.Width, image.Height);
+    // License Plate Detection
+    public static RawImage RedChannel (RawImage input) {
+        return GetChannel(input, R);
+    }
+    public static RawImage GreenChannel(RawImage input) {
+        return GetChannel(input, G);
+    }
+    public static RawImage BlueChannel(RawImage input) {
+        return GetChannel(input, B);
+    }
+    public static RawImage GetChannel(RawImage input, int channel) {
+        RawImage output = new(input.Width, input.Height);
         int length = output.Length;
         Parallel.For(0, length, i => {
-
-            uint b = image[i] >> B & 0xFF;
-            uint g = image[i] >> G & 0xFF;
-            uint r = image[i] >> R & 0xFF;
-
-            output[i] = (b << B | g << G | r << R | 0xFF000000);
+            uint pval = input[i] >> channel & 0xFF;
+            output[i] = (pval << B | pval << G | pval << R | 0xFF000000);
         });
-
         return output;
     }
+    public static RawImage Reverse(RawImage input) {
+
+        RawImage output = new(input.Width, input.Height);
+
+        int length = input.Length;
+        Parallel.For(0, length, i => {
+            uint b = 255 - (input[i] >> B & 0xFF);
+            uint g = 255 - (input[i] >> G & 0xFF);
+            uint r = 255 - (input[i] >> R & 0xFF);
+            output[i] = (b << B | g << G | r << R | 0xFF000000);
+
+        });
+        return output;
+    }
+
+    public static RawImage BinarizeLocal(RawImage input, int cellSize, int threshold) { 
+        int cellNumX = input.Width / cellSize+1;
+        int cellNumY = input.Height / cellSize+1;
+        int cellX = 0;
+        int cellY = 0;
+        RawImage output = new(input.Width, input.Height);
+        
+        
+        return output;
+    }
+    
+    public static RawImage BinarizeGlobal(RawImage input, int threshold) {
+        RawImage grayscale = GrayScale(input);
+        RawImage output = new (input.Width, input.Height);
+        int length = grayscale.Length;
+        Parallel.For(0, length, i => {
+            uint pval = input[i] >> R & 0xFF;
+            if (pval >= threshold) {
+                output[i] = 0xFFFFFFFF;
+            }
+        });
+        return output;
+    }
+
 }

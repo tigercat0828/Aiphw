@@ -29,7 +29,6 @@ namespace Aiphw.WPF.Views {
             Console.WriteLine("B" + (pixel >> 0 & 0xFF).ToString("X"));
             Console.WriteLine();
 
-
             RawImage raw = new("./Assets/wolf.png");
 
             Utility.UpdateImageBox(c_ShowImgBox, raw.ToBitmap());
