@@ -322,7 +322,7 @@ public static class ImageProcessing {
     }
 
     // License Plate Detection
-    public static RawImage RedChannel (RawImage input) {
+    public static RawImage RedChannel(RawImage input) {
         return GetChannel(input, R);
     }
     public static RawImage GreenChannel(RawImage input) {
@@ -331,7 +331,7 @@ public static class ImageProcessing {
     public static RawImage BlueChannel(RawImage input) {
         return GetChannel(input, B);
     }
-    public static RawImage GetChannel(RawImage input, int channel) {
+    private static RawImage GetChannel(RawImage input, int channel) {
         RawImage output = new(input.Width, input.Height);
         int length = output.Length;
         Parallel.For(0, length, i => {
@@ -354,24 +354,85 @@ public static class ImageProcessing {
         });
         return output;
     }
-
-    public static RawImage BinarizeLocal(RawImage input, int cellSize, int threshold) { 
-        int cellNumX = input.Width / cellSize+1;
-        int cellNumY = input.Height / cellSize+1;
-        int cellX = 0;
-        int cellY = 0;
-        RawImage output = new(input.Width, input.Height);
-        
-        
+    private static int[,] LocalAverageBrightness(RawImage input, int cellSize) {
+        RawImage grayscale = GrayScale(input);
+        int cellNumX = grayscale.Width / cellSize + 1;
+        int cellNumY = grayscale.Height / cellSize + 1;
+        int[,] averageBrightness = new int[cellNumX, cellNumY];
+        for (int i = 0; i < grayscale.Width; i++) {
+            for (int j = 0; j < grayscale.Height; j++) {
+                int cellX = i / cellSize;
+                int cellY = j / cellSize;
+                averageBrightness[cellX, cellY] += (int)(grayscale.GetPixel(i, j) & 0xFF);
+            }
+        }
+        for (int i = 0; i < averageBrightness.GetLength(0); i++) {
+            for (int j = 0; j < averageBrightness.GetLength(1); j++) {
+                averageBrightness[i, j] = (averageBrightness[i, j] / (cellSize * cellSize));
+            }
+        }
+        return averageBrightness;
+    }
+    public static RawImage Mosaic(RawImage input, int cellSize) {
+        int[,] averageBrightness= LocalAverageBrightness(input, cellSize);
+        RawImage output = new (input.Width, input.Height);
+        for (int i = 0; i < output.Width; i++) {
+            for (int j = 0; j < output.Height; j++) {
+                int cellX = i / cellSize;
+                int cellY = j / cellSize;
+                int pval = averageBrightness[cellX, cellY];
+                uint pixel = ((uint)pval << B | (uint)pval << G | (uint)pval << R | 0xFF000000);
+                output[i,j] = pixel;
+            }
+        }
         return output;
     }
-    
+    public static RawImage Outline(RawImage input) {
+        // input is a binarized image
+        RawImage output = new(input.Width, input.Height);
+        for (int i = 1; i < input.Width-1; i++) {
+            for (int j = 1; j < input.Height - 1; j++) {
+                if ((int)(input[i, j] & 0xFF) == 0) continue;
+                if ((int)(input[i - 1, j] & 0xFF) == 0) {
+                    output[i, j] = 0xFFFFFFFF;
+                    continue;
+                }
+                if ((int)(input[i + 1, j] & 0xFF) == 0) {
+                    output[i, j] = 0xFFFFFFFF;
+                    continue;
+                }
+                if ((int)(input[i, j - 1] & 0xFF) == 0) {
+                    output[i, j] = 0xFFFFFFFF;
+                    continue;
+                }
+                if ((int)(input[i, j + 1] & 0xFF) == 0) {
+                    output[i, j] = 0xFFFFFFFF;
+                    continue;
+                }
+            }
+        }
+        output = Reverse(output);
+        return output;
+    }
+    public static RawImage BinarizeLocal(RawImage input, int cellSize) {
+        RawImage localAvg = Mosaic(input, cellSize);
+        RawImage output = new RawImage(input.Width, input.Height);
+        int length = output.Length;
+        Parallel.For(0, length, i => {
+            uint inputVal = input[i] & 0xFF;
+            uint threshold = localAvg[i] & 0xFF;
+            if(inputVal > threshold) {
+                output[i] = 0xFFFFFFFF;
+            }
+        });
+        return output;
+    }
     public static RawImage BinarizeGlobal(RawImage input, int threshold) {
         RawImage grayscale = GrayScale(input);
         RawImage output = new (input.Width, input.Height);
         int length = grayscale.Length;
         Parallel.For(0, length, i => {
-            uint pval = input[i] >> R & 0xFF;
+            uint pval = input[i] & 0xFF;
             if (pval >= threshold) {
                 output[i] = 0xFFFFFFFF;
             }

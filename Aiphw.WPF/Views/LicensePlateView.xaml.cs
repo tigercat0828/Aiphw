@@ -30,7 +30,10 @@ namespace Aiphw.WPF.Views {
         RawImage m_RedChannel;
         RawImage m_GreenChannel;
         RawImage m_BlueChannel;
-        RawImage m_Binarize;
+        RawImage m_GlobalBinarize;
+        RawImage m_Mosaic;
+        RawImage m_LocalBinarize;
+        RawImage m_Outline;
         RawImage m_Empty;
         private void OpenFileBtn_Click(object sender, RoutedEventArgs e) {
 
@@ -39,16 +42,24 @@ namespace Aiphw.WPF.Views {
                 Title = "Open Image"
             };
             if (dialog.ShowDialog() == true) {
+
                 m_InputRaw = new(dialog.FileName);
                 m_RedChannel = ImageProcessing.RedChannel(m_InputRaw);
                 m_GreenChannel = ImageProcessing.GreenChannel(m_InputRaw);
                 m_BlueChannel = ImageProcessing.BlueChannel(m_InputRaw);
-                m_Binarize = ImageProcessing.BinarizeGlobal(m_InputRaw, 128);
+                m_GlobalBinarize = ImageProcessing.BinarizeGlobal(m_InputRaw, 128);
+                int cellsize = 30;
+                m_Mosaic = ImageProcessing.Mosaic(m_InputRaw, cellsize);
+                m_LocalBinarize = ImageProcessing.BinarizeLocal(m_InputRaw, cellsize);
+                m_Outline = ImageProcessing.Outline(m_LocalBinarize);
                 Utility.UpdateImageBox(c_InputImgBox, m_InputRaw.ToBitmap());
                 Utility.UpdateImageBox(c_RedChannelImgBox, m_RedChannel.ToBitmap());
                 Utility.UpdateImageBox(c_GreenChannelImgBox, m_GreenChannel.ToBitmap());
                 Utility.UpdateImageBox(c_BlueChannelImgBox, m_BlueChannel.ToBitmap());
-                Utility.UpdateImageBox(c_BinarizeImgBox, m_Binarize.ToBitmap());
+                Utility.UpdateImageBox(c_GlobalBinarizeImgBox, m_GlobalBinarize.ToBitmap());
+                Utility.UpdateImageBox(c_MosaicImgBox, m_Mosaic.ToBitmap());
+                Utility.UpdateImageBox(c_LocalBinarizeImgBox, m_LocalBinarize.ToBitmap());
+                Utility.UpdateImageBox(c_OutlineImgBox, m_Outline.ToBitmap());
             }
         }
         

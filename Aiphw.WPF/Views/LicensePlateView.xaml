@@ -11,6 +11,7 @@
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -35,10 +36,19 @@
             <Image Name="c_BlueChannelImgBox"></Image>
         </Border>
         <Border  Grid.Row="2" Grid.Column="0" Style="{StaticResource DefaultBorder}">
-            <Image Name="c_BinarizeImgBox"></Image>
+            <Image Name="c_GlobalBinarizeImgBox"></Image>
+        </Border>
+        <Border  Grid.Row="2" Grid.Column="1" Style="{StaticResource DefaultBorder}">
+            <Image Name="c_MosaicImgBox"></Image>
+        </Border>
+        <Border  Grid.Row="2" Grid.Column="2" Style="{StaticResource DefaultBorder}">
+            <Image Name="c_LocalBinarizeImgBox"></Image>
+        </Border>
+        <Border  Grid.Row="2" Grid.Column="3" Style="{StaticResource DefaultBorder}">
+            <Image Name="c_OutlineImgBox"></Image>
         </Border>
 
-        <Border  Grid.Row="2" Grid.Column="3" Style="{StaticResource DefaultBorder}">
+        <Border  Grid.Row="3" Grid.Column="3" Style="{StaticResource DefaultBorder}">
             <Image Name="c_EmptyImgBox"></Image>
         </Border>
 
