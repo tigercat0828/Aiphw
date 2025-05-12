@@ -1,15 +1,15 @@
-﻿using Aiphw.Models;
-using Aiphw.WPF.Extensions;
-using Microsoft.Win32;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using Aiphw.Models;
+using Aiphw.WPF.Extensions;
+using Microsoft.Win32;
 
 namespace Aiphw.WPF.Views {
 
     public partial class ConvolutionView : UserControl {
 
-        TextBox[,] c_MaskCellTextBox = new TextBox[5, 5];
+        readonly TextBox[,] c_MaskCellTextBox = new TextBox[5, 5];
         int m_MaskSize;
         RawImage m_inputRaw;
         RawImage m_outputRaw;
@@ -53,7 +53,7 @@ namespace Aiphw.WPF.Views {
 
         private void ProcessBtn_Click(object sender, RoutedEventArgs e) {
             float[] rawMask = GetCustomMaskCell();
-            MaskKernel kernel = new MaskKernel(rawMask);
+            MaskKernel kernel = new(rawMask);
             m_outputRaw = ImageProcessing.ConvolutionFullColor(m_inputRaw, kernel);
             Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
         }
@@ -76,11 +76,11 @@ namespace Aiphw.WPF.Views {
                     rawMask.Add(float.Parse(c_MaskCellTextBox[i, j].Text));
                 }
             }
-            return rawMask.ToArray();
+            return [.. rawMask];
         }
         private void SetMaskSize(int size) {
             m_MaskSize = size;
-            bool isEnabled = (size == 3) ? false : true;
+            bool isEnabled = size != 3;
             string text = (size == 3) ? string.Empty : "1";
             for (int i = 0; i < 5; i++) {
                 c_MaskCellTextBox[0, i].IsEnabled = isEnabled;
@@ -125,13 +125,14 @@ namespace Aiphw.WPF.Views {
             // Loop to create and add 25 TextBox controls to the MaskGrid
             for (int i = 0; i < 5; i++) {
                 for (int j = 0; j < 5; j++) {
-                    TextBox textBox = new TextBox();
-                    textBox.Name = $"m{i}{j}";
-                    textBox.Text = "0";
-                    textBox.Height = 40;
-                    textBox.FontSize = 20;
-                    textBox.TextAlignment = TextAlignment.Center;
-                    textBox.VerticalContentAlignment = VerticalAlignment.Center;
+                    TextBox textBox = new() {
+                        Name = $"m{i}{j}",
+                        Text = "0",
+                        Height = 40,
+                        FontSize = 20,
+                        TextAlignment = TextAlignment.Center,
+                        VerticalContentAlignment = VerticalAlignment.Center
+                    };
                     textBox.GotFocus += (sender, e) => {
                         TextBox textBox = (TextBox)sender;
                         textBox.SelectAll();

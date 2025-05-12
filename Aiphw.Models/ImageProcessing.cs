@@ -121,11 +121,10 @@ public static class ImageProcessing {
     public static RawImage Smooth(RawImage input) {
 
         MaskKernel smoothMask = MaskKernel.LoadPreBuiltMask(DefaultMask.GaussianSmooth);
-        RawImage garyScale = GrayScale(input);
         return ConvolutionFullColor(input, smoothMask);
+        RawImage garyScale = GrayScale(input);
         return ConvolutionGrayScale(garyScale, smoothMask);
     }
-
     public static RawImage EdgeDetection(RawImage input) {
         // Canny Edge Detection 
         // Step 1: Smooth
@@ -408,7 +407,7 @@ public static class ImageProcessing {
     }
     public static RawImage BinarizeLocal(RawImage input, int cellSize) {
         RawImage localAvg = Mosaic(input, cellSize);
-        RawImage output = new RawImage(input.Width, input.Height);
+        RawImage output = new(input.Width, input.Height);
         int length = output.Length;
         Parallel.For(0, length, i => {
             uint inputVal = input[i] & 0xFF;
@@ -432,4 +431,68 @@ public static class ImageProcessing {
         return output;
     }
 
+    public static RawImage ScaleNearestNeighbor(RawImage input, float scaleFactor) {
+
+        int newWidth = (int)(input.Width * scaleFactor);
+        int newHeight = (int)(input.Height * scaleFactor);
+        RawImage output = new(newWidth, newHeight);
+
+        Parallel.For(0, newHeight, y => {
+            for (int x = 0; x < newWidth; x++) {
+                int srcX = (int)(x / scaleFactor);
+                int srcY = (int)(y / scaleFactor);
+                srcX = Math.Clamp(srcX, 0, input.Width - 1);
+                srcY = Math.Clamp(srcY, 0, input.Height - 1);
+                output[y * newWidth + x] = input[srcY * input.Width + srcX];
+            }
+        });
+        return output;
+    }
+    public static RawImage ScaleBilinearInterpolation(RawImage input, float scaleFactor) {
+        int newWidth = (int)(input.Width * scaleFactor);
+        int newHeight = (int)(input.Height * scaleFactor);
+        RawImage output = new(newWidth, newHeight);
+
+        Parallel.For(0, newHeight, y => {
+            float srcY = y / scaleFactor;
+            int y1 = (int)srcY;
+            int y2 = Math.Min(y1 + 1, input.Height - 1);
+            float dy = srcY - y1;
+
+            for (int x = 0; x < newWidth; x++) {
+                float srcX = x / scaleFactor;
+                int x1 = (int)srcX;
+                int x2 = Math.Min(x1 + 1, input.Width - 1);
+                float dx = srcX - x1;
+
+                // 提取四個鄰近像素
+                uint p11 = input[y1 * input.Width + x1];
+                uint p12 = input[y1 * input.Width + x2];
+                uint p21 = input[y2 * input.Width + x1];
+                uint p22 = input[y2 * input.Width + x2];
+
+                // 插值計算（分通道處理）
+                uint b = BilinearInterpolate(p11, p12, p21, p22, dx, dy, B);
+                uint g = BilinearInterpolate(p11, p12, p21, p22, dx, dy, G);
+                uint r = BilinearInterpolate(p11, p12, p21, p22, dx, dy, R);
+
+                output[y * newWidth + x] = (b << B | g << G | r << R | 0xFF000000);
+            }
+        });
+        return output;
+    }
+    private static uint BilinearInterpolate(uint p11, uint p12, uint p21, uint p22, float dx, float dy, int shift) {
+        float v11 = (p11 >> shift) & 0xFF;
+        float v12 = (p12 >> shift) & 0xFF;
+        float v21 = (p21 >> shift) & 0xFF;
+        float v22 = (p22 >> shift) & 0xFF;
+
+        float value =
+            (1-dx) * (1-dy) * v11 +
+            dx * (1-dy) * v12 +
+            (1-dx) * dy * v21 +
+            dx * dy * v22;
+
+        return (uint)Math.Clamp(value, 0, 255);
+    }
 }
