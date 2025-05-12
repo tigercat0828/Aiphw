@@ -1,7 +1,4 @@
-﻿
-using System.Threading.Channels;
-
-namespace Aiphw.Models;
+﻿namespace Aiphw.Models;
 
 public static class ImageProcessing {
 
@@ -52,7 +49,7 @@ public static class ImageProcessing {
 
         Parallel.For(0, height, y => {
             for (int x = 0; x < width; x++) {
-                float[] rgba = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+                float[] rgba = [0.0f, 0.0f, 0.0f, 0.0f];
 
                 for (int i = -kernelOffset; i <= kernelOffset; i++) {
                     for (int j = -kernelOffset; j <= kernelOffset; j++) {
@@ -125,14 +122,10 @@ public static class ImageProcessing {
 
         MaskKernel smoothMask = MaskKernel.LoadPreBuiltMask(DefaultMask.GaussianSmooth);
         RawImage garyScale = GrayScale(input);
-        return ConvolutionGrayScale(garyScale, smoothMask);
-
         return ConvolutionFullColor(input, smoothMask);
-
-
-
+        return ConvolutionGrayScale(garyScale, smoothMask);
     }
-  
+
     public static RawImage EdgeDetection(RawImage input) {
         // Canny Edge Detection 
         // Step 1: Smooth
@@ -149,7 +142,6 @@ public static class ImageProcessing {
         RawImage gradientData = OverlayCalculate(sobelXimage, sobelYimage, grad);
 
         return Reverse(gradientData);
-
     }
     public static RawImage GrayScale(RawImage input) {
         RawImage output = new(input.Width, input.Height);
@@ -306,7 +298,7 @@ public static class ImageProcessing {
         for (int i = 1; i < 256; i++) {
             eqhisto[i] = (uint)Math.Round((cdf[i] - minCdf) * denominator);
         }
-        
+
         RawImage output = new(input.Width, input.Height);
         for (int i = 0; i < output.Length; i++) {
             uint inVal = input[i] >> R & 0xFF;
@@ -374,15 +366,15 @@ public static class ImageProcessing {
         return averageBrightness;
     }
     public static RawImage Mosaic(RawImage input, int cellSize) {
-        int[,] averageBrightness= LocalAverageBrightness(input, cellSize);
-        RawImage output = new (input.Width, input.Height);
+        int[,] averageBrightness = LocalAverageBrightness(input, cellSize);
+        RawImage output = new(input.Width, input.Height);
         for (int i = 0; i < output.Width; i++) {
             for (int j = 0; j < output.Height; j++) {
                 int cellX = i / cellSize;
                 int cellY = j / cellSize;
                 int pval = averageBrightness[cellX, cellY];
                 uint pixel = ((uint)pval << B | (uint)pval << G | (uint)pval << R | 0xFF000000);
-                output[i,j] = pixel;
+                output[i, j] = pixel;
             }
         }
         return output;
@@ -421,7 +413,7 @@ public static class ImageProcessing {
         Parallel.For(0, length, i => {
             uint inputVal = input[i] & 0xFF;
             uint threshold = localAvg[i] & 0xFF;
-            if(inputVal > threshold) {
+            if (inputVal > threshold) {
                 output[i] = 0xFFFFFFFF;
             }
         });
@@ -429,7 +421,7 @@ public static class ImageProcessing {
     }
     public static RawImage BinarizeGlobal(RawImage input, int threshold) {
         RawImage grayscale = GrayScale(input);
-        RawImage output = new (input.Width, input.Height);
+        RawImage output = new(input.Width, input.Height);
         int length = grayscale.Length;
         Parallel.For(0, length, i => {
             uint pval = input[i] & 0xFF;

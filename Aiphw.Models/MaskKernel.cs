@@ -43,34 +43,34 @@ public class MaskKernel {
             default:
                 break;
         }
-        return new MaskKernel(Array.Empty<float>());
+        return new MaskKernel([]);
     }
     public void Transpose() {
         Array.Reverse(mask);
     }
     public override string ToString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
         for (int i = 0; i < mask.Length; i++) {
             sb.AppendLine("[ " + string.Join(", ", mask[i]) + "]");
         }
         return sb.ToString();
     }
-    static float[] SmoothMask = {
+    static readonly float[] SmoothMask = [
         2, 4, 5, 4, 2,
         4, 9, 12, 9, 4,
         5, 12, 15, 12, 5,
         4, 9, 12, 9, 4,
         2, 4, 5, 4, 2
-    };
+    ];
 
-    static float[] SobelX = {
+    static readonly float[] SobelX = [
         -1, 0,  1,
         -2, 0,  2,
         -1, 0,  1,
-    };
-    static float[] SobelY = {
+    ];
+    static readonly float[] SobelY = [
         -1, -2, -1,
         0,  0,  0,
         1,  2,  1,
-    };
+    ];
 }

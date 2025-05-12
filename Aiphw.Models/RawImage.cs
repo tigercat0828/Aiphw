@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-
 namespace Aiphw.Models;
 [SuppressMessage("Microsoft.Design", "CA1416:ValidatePlatformCompatibility")]
 public class RawImage {
@@ -34,7 +33,7 @@ public class RawImage {
         Height = bmp.Height;
     }
     public RawImage(RawImage other) {
-        Pixels = other.Pixels.ToArray();
+        Pixels = [.. other.Pixels];
         Width = other.Width;
         Height = other.Height;
     }
@@ -46,7 +45,7 @@ public class RawImage {
     public RawImage(int width, int height, uint[] pixels) {
         Width = width;
         Height = height;
-        Pixels = pixels.ToArray();
+        Pixels = [.. pixels];
     }
     public void SetPixel(int x, int y, uint pixel) {
         int index = y * Width + x;

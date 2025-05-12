@@ -1,8 +1,8 @@
-﻿using Aiphw.Models;
+﻿using System.Windows;
+using System.Windows.Controls;
+using Aiphw.Models;
 using Aiphw.WPF.Extensions;
 using Microsoft.Win32;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace Aiphw.WPF.Views {
 
