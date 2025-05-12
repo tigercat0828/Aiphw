@@ -1,9 +1,9 @@
-﻿using Aiphw.Models;
-using Aiphw.WPF.Extensions;
-using Microsoft.Win32;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using Aiphw.Models;
+using Aiphw.WPF.Extensions;
+using Microsoft.Win32;
 
 namespace Aiphw.WPF.Views {
     /// <summary>
@@ -37,9 +37,10 @@ namespace Aiphw.WPF.Views {
             }
         }
         private void SaveFileBtn_Click(object sender, RoutedEventArgs e) {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "JPEG Image (*.jpg)|*.jpg|PNG Image (*.png)|*.png|Bitmap Image (*.bmp)|*.bmp|PPM Image (*.ppm)|*.ppm";
-            saveFileDialog.Title = "Save Image";
+            SaveFileDialog saveFileDialog = new() {
+                Filter = "JPEG Image (*.jpg)|*.jpg|PNG Image (*.png)|*.png|Bitmap Image (*.bmp)|*.bmp|PPM Image (*.ppm)|*.ppm",
+                Title = "Save Image"
+            };
 
             if (saveFileDialog.ShowDialog() == true) {
                 string filename = saveFileDialog.FileName;
@@ -53,7 +54,8 @@ namespace Aiphw.WPF.Views {
 
             Utility.SetHistogramFromChannel(c_HistoGraph.Plot, m_outputRaw, channel: 0, Color.FromArgb(128, 128, 128), "gray");
 
-            c_HistoGraph.Render();
+            // c_HistoGraph.Render();
+            c_HistoGraph.Refresh();
         }
 
 

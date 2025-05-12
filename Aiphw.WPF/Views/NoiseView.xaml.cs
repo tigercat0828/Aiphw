@@ -1,9 +1,9 @@
-﻿using Aiphw.Models;
-using Aiphw.WPF.Extensions;
-using Microsoft.Win32;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using Aiphw.Models;
+using Aiphw.WPF.Extensions;
+using Microsoft.Win32;
 
 namespace Aiphw.WPF.Views {
     /// <summary>
@@ -44,8 +44,8 @@ namespace Aiphw.WPF.Views {
             c_NoiseImgBox.Source = null;
             c_OutputHistogram.Plot.Clear();
             c_NoiseHistogram.Plot.Clear();
-            c_OutputHistogram.Render();
-            c_NoiseHistogram.Render();
+            c_OutputHistogram.Refresh();
+            c_NoiseHistogram.Refresh();
         }
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
 
@@ -64,18 +64,18 @@ namespace Aiphw.WPF.Views {
             Utility.UpdateImageBox(c_InputImgBox, m_inputRaw.ToBitmap());
             var gray = ImageProcessing.GrayScale(m_inputRaw);
             Utility.SetHistogramFromChannel(c_InputHistogram.Plot, gray, 0, Color.FromArgb(128, 128, 128), "Gray");
-            c_InputHistogram.Render();
+            c_InputHistogram.Refresh();
         }
         private void UpdateAllControls() {
             Utility.UpdateImageBox(c_InputImgBox, m_inputRaw.ToBitmap());
             Utility.SetHistogramFromChannel(c_InputHistogram.Plot, ImageProcessing.GrayScale(m_inputRaw), 0, Color.FromArgb(128, 128, 128), "Gray");
-            c_InputHistogram.Render();
+            c_InputHistogram.Refresh();
             Utility.UpdateImageBox(c_NoiseImgBox, m_noiseRaw.ToBitmap());
             Utility.SetHistogramFromChannel(c_NoiseHistogram.Plot, ImageProcessing.GrayScale(m_noiseRaw), 0, Color.FromArgb(128, 128, 128), "Gray");
-            c_NoiseHistogram.Render();
+            c_NoiseHistogram.Refresh();
             Utility.UpdateImageBox(c_OutputImgBox, m_outputRaw.ToBitmap());
             Utility.SetHistogramFromChannel(c_OutputHistogram.Plot, ImageProcessing.GrayScale(m_outputRaw), 0, Color.FromArgb(128, 128, 128), "Gray");
-            c_OutputHistogram.Render();
+            c_OutputHistogram.Refresh();
         }
         private void SaveFileBtn_Click(object sender, RoutedEventArgs e) {
             SaveFileDialog saveFileDialog = new();

@@ -1,11 +1,11 @@
-﻿using Aiphw.Models;
-using ScottPlot;
-using ScottPlot.Statistics;
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
 using System.Windows.Media.Imaging;
+using Aiphw.Models;
+using ScottPlot;
+using ScottPlot.Statistics;
+using Color = System.Drawing.Color;
 using Image = System.Windows.Controls.Image;
-
 namespace Aiphw.WPF.Extensions;
 public static class Utility {
     public static BitmapImage BitmapToImageSource(Bitmap bitmap) {
@@ -23,15 +23,15 @@ public static class Utility {
         imgBox.Source = BitmapToImageSource(bitmap);
     }
     public static void SetHistogram(Plot plot, double[] values, string xLabel, string yLabel, double min, double max, int binCount) {
-        Histogram hist = new(min, max, binCount);
+
+        var hist = Histogram.WithBinCount(binCount, min, max); // Histogram hist = new(min, max, binCount);
         plot.Clear();
         hist.AddRange(values);
-        plot.AddBar(values: hist.Counts, positions: hist.Bins);
+        plot.Add.Histogram(hist);   // plot.AddBar(values: hist.Counts, positions: hist.Bins);
 
-        plot.XAxis.Label(xLabel);
-        plot.YAxis.Label(yLabel);
-
-        plot.SetAxisLimits(yMin: 0);
+        plot.XLabel(xLabel);
+        plot.YLabel(yLabel);
+        plot.Axes.SetLimits(bottom: 0);   // plot.SetAxisLimits(yMin: 0);
     }
 
     public static void SetHistogramFromChannel(Plot plot, RawImage image, int channel, Color color, string barLabel, bool clear = true) {
@@ -43,21 +43,25 @@ public static class Utility {
             //Console.WriteLine(channels[i]);
         }
 
-        var hist = Histogram.WithFixedBinSize(min: 0, max: 255, binSize: 1);
+        // var hist = Histogram.WithFixedBinSize(min: 0, max: 255, binSize: 1); 4.0
+        var hist = Histogram.WithBinSize(1, 0, 255);
+
+
         if (clear) {
             plot.Clear();
         }
         hist.AddRange(channels);
-        var bar = plot.AddBar(values: hist.Counts, positions: hist.Bins, color);
-        bar.BarWidth = 1;
-        bar.Label = barLabel;
+        // var bar = plot.AddBar(values: hist.Counts, positions: hist.Bins, color);
+        var bar = plot.Add.Bars(hist.Bins, hist.Counts);
 
-        var legend = plot.Legend(enable: true);
-        legend.Orientation = Orientation.Horizontal;
-        legend.Location = Alignment.UpperCenter;
+        // bar.Label = barLabel;
 
-        //plot.XAxis.Label("intensity");
-        //plot.YAxis.Label("frequency");
-        plot.SetAxisLimits(yMin: 0);
+        //var legend = plot.Legend(enable: true);
+        //legend.Orientation = Orientation.Horizontal;
+        //legend.Location = Alignment.UpperCenter;
+
+        plot.XLabel("intensity");
+        plot.YLabel("frequency");
+        plot.Axes.SetLimits(bottom: 0);  //plot.SetAxisLimits(yMin: 0);
     }
 }

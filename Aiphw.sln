@@ -5,8 +5,6 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aiphw.WPF", "Aiphw.WPF\Aiphw.WPF.csproj", "{7E996C19-7EEE-4E82-97BF-B195E4B6AB6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aiphw.Benchmark", "Aiphw.Benchmark\Aiphw.Benchmark.csproj", "{E6F43B03-2F4B-4A1D-A293-A752A2A223F0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aiphw.Models", "Aiphw.Models\Aiphw.Models.csproj", "{BF7A45FD-CE84-4CFB-9A61-AB844E3ED782}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{7E996C19-7EEE-4E82-97BF-B195E4B6AB6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E996C19-7EEE-4E82-97BF-B195E4B6AB6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E996C19-7EEE-4E82-97BF-B195E4B6AB6C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E6F43B03-2F4B-4A1D-A293-A752A2A223F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6F43B03-2F4B-4A1D-A293-A752A2A223F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E6F43B03-2F4B-4A1D-A293-A752A2A223F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E6F43B03-2F4B-4A1D-A293-A752A2A223F0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF7A45FD-CE84-4CFB-9A61-AB844E3ED782}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BF7A45FD-CE84-4CFB-9A61-AB844E3ED782}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF7A45FD-CE84-4CFB-9A61-AB844E3ED782}.Release|Any CPU.ActiveCfg = Release|Any CPU

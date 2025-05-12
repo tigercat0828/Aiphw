@@ -1,11 +1,10 @@
-﻿using Aiphw.Models;
+﻿using System.Windows;
+using System.Windows.Controls;
+using Aiphw.Models;
 using Aiphw.WPF.Extensions;
 using Microsoft.Win32;
-using ScottPlot;
-using System.Drawing;
-using System.Windows;
-using System.Windows.Controls;
-
+using ScottPlot.WPF;
+using Color = System.Drawing.Color;
 
 namespace Aiphw.WPF.Views {
     /// <summary>
@@ -60,7 +59,7 @@ namespace Aiphw.WPF.Views {
 
             Utility.SetHistogramFromChannel(plotControl.Plot, image, channel: 0, Color.FromArgb(128, 128, 128), "gray");
 
-            plotControl.Render();
+            plotControl.Refresh();
         }
     }
 
